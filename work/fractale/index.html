@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>fractal</title>
+
+<link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="bootstrap-select.min.css">
+<script src="jquery.js" type="text/javascript"></script>
+<script src="bootstrap.min.js" type="text/javascript"></script>
+<!-- <script src="bootstrap-select.min.js" type="text/javascript"></script> -->
+
+<!-- ここからjs -->
+  <script>
+
+  // canvasの初期値と最初の木を描写
+    function start(){
+      canvas = document.getElementById("canvas");
+      ct = canvas.getContext("2d");
+      w = canvas.width;
+      h = canvas.height;
+      colors = document.num.colors.value;
+      ct.strokeStyle = colors //赤色
+
+      basex = w/2;
+      var iniY = basey;
+      ct.translate(w/2,h);
+
+      ct.beginPath();
+      ct.moveTo(0,0);
+      ct.lineTo(0,-iniY);
+      ct.stroke();
+
+      // 次の木の要素を二重配列に格納
+      var elem = [];
+      origin = [];
+      var ration = 1;
+      elem.push(0,(-iniY),0,ration);
+      origin.push(elem);
+    }
+
+  // 枝を描写する関数 引数として前の枝の頂点の座標、角度、比率を受け取る
+  function part(seed){
+    var seeds = seed;
+    // 次の木の情報を含む配列を格納する配列
+    var nextSeeds = [];
+    for (var i = 0; i < seeds.length; i++){
+      var x = seeds[i][0];
+      var y =  seeds[i][1];
+      var angle = seeds[i][2];
+      var newRation = (seeds[i][3]*ration);
+
+      // 次に渡す要素の配列
+      var leftElem = [];
+      var rightElem = [];
+
+      // 角度計算
+      var leftAngle = angle - ang;
+      var rightAngle = angle + ang;
+
+      // 左枝の平行移動前の新しい枝をの座標を生成
+      var preX = (basey) * Math.sin(leftAngle*Math.PI/180) * newRation;
+      var preY = -(basey) * Math.cos(leftAngle*Math.PI/180) * newRation;
+
+
+      // 枝の頂点の並行移動
+      var newLeftX = preX + x;
+      var newLeftY = preY + y;
+
+      ct.beginPath();
+      ct.moveTo(x,y);
+      ct.lineTo(newLeftX,newLeftY);
+      ct.stroke();
+      leftElem.push(newLeftX,newLeftY,leftAngle,newRation);
+      nextSeeds.push(leftElem);
+
+      // 右枝の平行移動前の新しい枝をの座標を生成
+      var preX = (basey) * Math.sin(rightAngle*Math.PI/180) * newRation;
+      var preY = -(basey) * Math.cos(rightAngle*Math.PI/180) * newRation;
+
+      // 枝の頂点の並行移動
+      var newRightX = preX + x;
+      var newRightY = preY + y;
+
+      ct.beginPath();
+      ct.moveTo(x,y);
+      ct.lineTo(newRightX,newRightY);
+      ct.stroke();
+
+      rightElem.push(newRightX,newRightY,rightAngle,newRation);
+      nextSeeds.push(rightElem);
+    }
+    return nextSeeds;
+  }
+
+    // formのFractaleボタンが押された時の処理
+    function deal(){
+      basey = eval(document.num.heights.value);
+      // 最初の場合だけstart関数を呼び出す
+      if (typeof count === "undefined"){
+        start();
+      }
+      // 描写回数を記憶する変数
+      count = 0;
+      // 入力された角度、倍率
+      ang = eval(document.num.angle.value);
+      ration = eval(document.num.ration.value);
+      //  描写する時間
+      interval = eval(document.num.times.value) * 1000;
+
+      var status = document.getElementById("text")
+      status.innerHTML = "Processing";
+
+      starter = setInterval(function(){
+      origin = part(origin)
+      if (count >= 15){
+        clearInterval(starter);
+        status.innerHTML = "Stop";
+      }
+      count = count + 1;
+    },interval);
+  }
+
+  // Quitボタンが押された時の処理
+  function stop(){
+    clearInterval(starter);
+    var status = document.getElementById("text")
+    status.innerHTML = "Stop";
+  }
+  </script>
+  <!-- ここまでjs -->
+
+</head>
+<body>
+  <div class="container">
+    <div class="hero-unit">
+      <h1>FRACTALE</h1>
+    </div>
+    <canvas width="650" height="650" id="canvas"></canvas>
+      <div class="input>">
+        <form name="num" class="form-inline">
+          <p><h3>
+            <input type="text" size="1" name="angle" value="45" class="form-control" class="span1" /> deg　
+             <input type="text" size='1' name="ration" value="0.5" class="form-control" class="span1" /> /1　
+             <input type="text" size="1" name="times" value="1"  class="form-control" class="span1" /> /sec　
+             <input type="text" size="1" name="heights" value="200"  class="form-control" class="span1" /> /650
+             <!-- <input type="checkbox" value="イヌ">dog -->
+             <select name="colors">
+               <option value="rgb(255, 255, 255)">WHITE</option>
+               <option value="rgb(76, 196, 222)">SNOW</option>
+               <option value="rgb(0, 255, 0)">GREEN</option>
+               <option value="rgb(0, 0, 255)">BLUE</option>
+               <option value="rgb(255, 0, 255)">PURPLE</option>
+               <option value="rgb(0, 0, 255)">RED</option>
+               <option value="rgb(204, 140, 0)">ORANGE</option>
+             </select>
+           </p>
+          <input type="button" class="btn btn-danger" value="Fractale" onClick="deal()">
+          <input type="button" class="btn btn-danger" value="Quit" onClick="stop()">
+          <span id="text">Stop</span>
+
+        </form>
+    </div>
+  </div>
+</body>
